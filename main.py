@@ -10,16 +10,21 @@ except ImportError:
     print("No module named 'google' found")
 
 global already_checked
+global domains_checked
 global start_time
 
 start_time = time.time()
 
 already_checked = []
+domains_checked = []
 
 def check_for_pirate_bay(url):
     global already_checked
     if url in already_checked: return False
     if url[0] == '/': return False
+    if url[0] == '#': return False
+    if "facebook" in url or "google.com" in url or "instagram" in url or "twitter" in url: return False
+    if len(url) < 5: return False
     already_checked.append(url)
     if len(already_checked) % 10 == 0: print("Checked", len(already_checked), "sites.")
     req = urllib.request.Request(
@@ -41,6 +46,7 @@ def check_for_pirate_bay(url):
     return False
 
 def get_urls(url):
+    global domains_checked
     req = urllib.request.Request(
         url=url,
         headers={'User-Agent': 'Mozilla/5.0'}
@@ -54,10 +60,16 @@ def get_urls(url):
     for link in soup.findAll('a'):
         current_url = link.get('href')
         if current_url is None: continue
-       # if current_url[0] == '/': continue
+        if 'http' not in current_url: continue
+        domain = current_url.replace('https://','').split('/')[0]
+        if domain in domains_checked: continue
+        domains_checked.append(domain)
         if 'google.com' in current_url: continue
         slash_count = current_url.count('/')
-        if slash_count != 3 or current_url[-1] != '/': continue
+       # if slash_count != 3: continue
+        if current_url == '': continue
+       # if current_url[-1] != '/': continue
+        if len(current_url) < 5: continue
         out_urls.append(current_url)
     return out_urls
 
